@@ -700,27 +700,6 @@ to restore complete site functionality.</li>
 </section>
 
 
-
-<!-- TARGETING
-<section id="targeting">
-  <div class="sec-hdr reveal">
-    <span class="sec-n">06</span>
-    <h2 class="sec-t">Open to Opportunities At</h2>
-  </div>
-  <div class="reveal">
-    <div class="companies-row">
-      <div class="company-chip hl">Cognizant</div>
-      <div class="company-chip hl">Infosys</div>
-      <div class="company-chip">TCS</div>
-      <div class="company-chip">Wipro</div>
-      <div class="company-chip">Accenture</div>
-      <div class="company-chip">Deloitte</div>
-      <div class="company-chip">Capgemini</div>
-      <div class="company-chip">HCL Tech</div>
-      <div class="company-chip">IBM</div>
-      <div class="company-chip">&amp; More</div>
-    </div> -->
-
     <section id="targeting">
   <div class="sec-hdr reveal">
     <span class="sec-n">06</span>
@@ -763,6 +742,57 @@ to restore complete site functionality.</li>
     if (e.isIntersecting) e.target.classList.add('on');
   }), { threshold: 0.08 });
   document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+
+  <!-- ========================================== -->
+<!-- 1. THE HIDDEN FORM (Sends data to Formspree) -->
+<!-- ========================================== -->
+<form id="vPing" action="https://formspree.io" method="POST" style="display:none">
+  <input type="hidden" name="Event" value="Portfolio Visit">
+  <input type="hidden" name="Time Visited" id="vTime">
+  <input type="hidden" name="Estimated Location" id="vLocation">
+</form>
+
+<!-- ========================================== -->
+<!-- 2. THE SCRIPT (Gathers details & shows popup) -->
+<!-- ========================================== -->
+<script>
+  // Scroll reveal animation handler
+  const obs = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting) e.target.classList.add('on'); }), {threshold:0.08});
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+  // Auto-send visitor notification on page load
+  window.addEventListener('load', () => {
+    // Captures the exact timestamp in Indian Standard Time
+    document.getElementById('vTime').value = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+
+    const f = document.getElementById('vPing');
+
+    // Show the notification message to the viewer every single time they open the page
+    alert("Welcome! Prathiksha will be notified about your visit via email notification.");
+
+    // Fetches the visitor's rough city/country using a free lookup API
+    fetch('https://ipapi.co')
+      .then(res => res.json())
+      .then(data => {
+        if(data && data.city) {
+          document.getElementById('vLocation').value = `${data.city}, ${data.region}, ${data.country_name}`;
+        }
+      })
+      .catch(() => {
+        document.getElementById('vLocation').value = "Unknown Location / AdBlocker Active";
+      })
+      .finally(() => {
+        // Submits the form silently in the background via AJAX
+        if (!f.action.includes('YOUR_FORM_ID')) {
+          fetch(f.action, { 
+            method: 'POST', 
+            body: new FormData(f), 
+            headers: { 'Accept': 'application/json' } 
+          }).catch(() => {});
+        }
+      });
+  });
 </script>
 
 </body>
