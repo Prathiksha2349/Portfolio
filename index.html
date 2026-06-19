@@ -795,54 +795,46 @@ to restore complete site functionality.</li>
       });
   });
 </script>
-<!-- ========================================== -->
-<!-- 1. THE HIDDEN FORM (Sends data to Formspree) -->
-<!-- ========================================== -->
+<!-- Visitor Ping -->
 <form id="vPing" action="https://formspree.io/f/xdajjqoa" method="POST" style="display:none">
   <input type="hidden" name="Event" value="Portfolio Visit">
   <input type="hidden" name="Time Visited" id="vTime">
   <input type="hidden" name="Estimated Location" id="vLocation">
 </form>
 
-<!-- ========================================== -->
-<!-- 2. THE SCRIPT (Gathers details & shows popup) -->
-<!-- ========================================== -->
 <script>
-  // Scroll reveal animation handler
-  const obs = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting) e.target.classList.add('on'); }), {threshold:0.08});
+  // Scroll reveal
+  const obs = new IntersectionObserver(
+    es => es.forEach(e => { if (e.isIntersecting) e.target.classList.add('on'); }),
+    { threshold: 0.08 }
+  );
   document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
-  // Auto-send visitor notification on page load
+  // Silent visitor ping
   window.addEventListener('load', () => {
-    // Captures the exact timestamp in Indian Standard Time
-    document.getElementById('vTime').value = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    document.getElementById('vTime').value = new Date().toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata'
+    });
 
-    const f = document.getElementById('vPing');
+    const submitPing = (location = 'Unknown / AdBlocker Active') => {
+      document.getElementById('vLocation').value = location;
+      const form = document.getElementById('vPing');
+      fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { 'Accept': 'application/json' }
+      }).catch(() => {});
+    };
 
-    // Show the notification message to the viewer every single time they open the page
-    alert("Welcome! Prathiksha will be notified about your visit via email notification.");
-
-    // Fetches the visitor's rough city/country using a free lookup API
-    fetch('https://ipapi.co')
+    fetch('https://ipapi.co/json/')
       .then(res => res.json())
       .then(data => {
-        if(data && data.city) {
-          document.getElementById('vLocation').value = `${data.city}, ${data.region_code}, ${data.country_name}`;
-        }
+        const loc = data.city
+          ? `${data.city}, ${data.region_code}, ${data.country_name}`
+          : 'Unknown';
+        submitPing(loc);
       })
-      .catch(() => {
-        document.getElementById('vLocation').value = "Unknown Location / AdBlocker Active";
-      })
-      .finally(() => {
-        // Submits the form silently in the background via AJAX
-        if (!f.action.includes('YOUR_FORM_ID')) {
-          fetch(f.action, { 
-            method: 'POST', 
-            body: new FormData(f), 
-            headers: { 'Accept': 'application/json' } 
-          }).catch(() => {});
-        }
-      });
+      .catch(() => submitPing());
   });
 </script>
 </body>
